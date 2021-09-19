@@ -8,7 +8,7 @@
     var win = new Window("window", undefined, undefined, {
         resizeable: true
     });
-    win.text = "Quick Render Layers";
+
     win.orientation = "column";
     win.alignChildren = ["fill", "center"];
     win.spacing = 10;
@@ -27,7 +27,7 @@
         multiline: "true",
     });
     statictext1.enabled = false;
-    statictext1.text = "Quick Render";
+    statictext1.text = "Quick Render Layers";
 
     var settingsBtn = rHeader.add("iconButton", undefined, undefined, {
         name: "settingsBtn",
@@ -175,33 +175,31 @@
     };
 
     settingsBtn.onClick = function() {
-        alert("runffmpeg");
-        ffmpeg();
 
-        var setsWin = new Window("dialog", undefined, undefined);
-        setsWin.text = "Settings";
-        setsWin.orientation = "column";
-        setsWin.alignChildren = ["fill", "center"];
-        setsWin.spacing = 10;
-        setsWin.margins = 16;
+        alert("Quick Render Layers v1.0 \n Quick Render Layers allows you to output renders for each layer within a given comp. This is not usually possible due to limitations in After Effects. \n \n If you want to output h.264 files, you'll be prompted for a path to your own FFmpeg binary. \n \n Made by hsom");
 
-        setsWin.minWidth = 500;
+        // var setsWin = new Window("dialog", undefined, undefined);
+        // setsWin.text = "Settings";
+        // setsWin.orientation = "column";
+        // setsWin.alignChildren = ["fill", "center"];
+        // setsWin.spacing = 10;
+        // setsWin.margins = 16;
 
-
-        var setsGrp1 = setsWin.add("group", undefined, {
-            name: "setsGrp1",
-        });
+        // setsWin.minWidth = 500;
 
 
-        var setsStaticText1 = setsGrp1.add("statictext", {
-            name: "setsStaticText1",
-        });
-
-        setsStaticText1.text = "Hello";
+        // var setsGrp1 = setsWin.add("group", undefined, {
+        //     name: "setsGrp1",
+        // });
 
 
+        // var setsStaticText1 = setsGrp1.add("statictext", {
+        //     name: "setsStaticText1",
+        // });
 
-        setsWin.show();
+        // setsStaticText1.text = "Hello";
+
+        // setsWin.show();
     };
 }
 
@@ -222,7 +220,7 @@ function QR() {
 
             // Store variables for cur work area to reset later
             var a = myComp.workAreaStart;
-            var b = myComp.workAreaStart;
+            var b = myComp.workAreaDuration;
 
             // Reset work area bounds to get around the annoying problem
             myComp.workAreaStart = 0;
@@ -244,13 +242,13 @@ function QR() {
             om.applyTemplate(dropdown1.selection);
             var outFName = myLayer.name;
 
-            // If h264 checked, stores in temp subfolder 
-            if(checkbox1.value == 1){
-            alert(system.callSystem("mkdir -p \"" + MY_FILE + "/mp4\""));
-            om.file = new File(MY_FILE + "/mp4/" + outFName);
-            }else{
-            om.file = new File(MY_FILE + "/" + outFName);
-        };
+            // If h264 checked, stores output in temp subfolder 
+            if (checkbox1.value == 1) {
+                alert(system.callSystem("mkdir -p \"" + MY_FILE + "/mp4\""));
+                om.file = new File(MY_FILE + "/mp4/" + outFName);
+            } else {
+                om.file = new File(MY_FILE + "/" + outFName);
+            };
 
         };
         // Reset work area duration
@@ -261,7 +259,17 @@ function QR() {
         app.project.renderQueue.render();
 
         //Render out h264 versions if checkbox ticked
-        ffmpeg();
+        var syscall1 = ("cd \"" + MY_FILE + "/mp4\"; for i in *.mov; do " + ffmpegInstallation + " -y -i \"\$i\" \"\$\{i\%.*\}.mp4\"; mv *.mp4 .. ; done").toString();
+        var syscall2 = ("cd \"" + MY_FILE + "\"; rm -r \"./mp4\"");
+        if (checkbox1.value == true) {
+            alert(syscall1);
+            var myCall = system.callSystem(syscall1);
+            var myCall = system.callSystem(syscall2);
+            alert(myCall);
+        } else {
+            return
+        };
+
     };
 };
 
@@ -285,16 +293,4 @@ function refreshTemplates() {
     if (om.templates.length > 0) dropdown1.selection = 0;
 
     rqi.remove(); // Remove the temp render queue item
-};
-
-function ffmpeg() {
-
-    var syscall = ("cd \"" + MY_FILE + "/mp4\"; for i in *.mov; do " + ffmpegInstallation + " -y -i \"\$i\" \"\$\{i\%.*\}.mp4\"; done &").toString();
-    if (checkbox1.value == 1) {
-        alert(syscall);
-        var myCall = system.callSystem(syscall);
-        alert(myCall);
-    } else {
-        return
-    };
 };
