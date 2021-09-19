@@ -5,4 +5,3 @@ Output a render for each layer within a composition without having to break comp
 - Automatically remember previous settings 
 - Add setting to automatically solo layers before render
 - On first usage, give user ability to supply path to ffmpeg binary
-
