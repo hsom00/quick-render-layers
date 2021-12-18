@@ -1,76 +1,108 @@
-//'Quick Render Selected layers'
-// By HSOM - 2021
-//
-// Good for spitting out quick renders with an option to run a shell script at the end to convert to h264.
+// quick-render.jsx by j.b.
 
-// UI Setup
+// -----------------------------------------------
+//                   Variables                    
+// -----------------------------------------------
+
+var myComp = app.project.activeItem;
+var ffmpegInstallation = "\"/Users/hsom/Library/Application Support/Adobe/CEP/extensions/Anubis/src/ffmpeg/ffmpeg\"";
+
+
+// -----------------------------------------------
+//                Set up UI Panel                 
+// -----------------------------------------------
+
 {
     var win = new Window("window", undefined, undefined, {
         resizeable: true
     });
 
     win.orientation = "column";
-    win.alignChildren = ["fill", "center"];
-    win.spacing = 10;
-    win.margins = 16;
+    win.alignChildren = ["fill", "top"];
+    win.spacing = 0;
+    win.margins = 0;
     win.minWidth = 500;
 
-    var rHeader = win.add("group", undefined, undefined, {
-        name: "rHeader",
-        orientation: "row",
+    var renderButtonGrp = win.add("group", undefined, undefined, {
+        name: "renderButtonGrp"
     });
-    rHeader.alignment = ["fill", "center"];
-    rHeader.margins = [0, 0, 0, 20];
+    renderButtonGrp.alignment = ["fill", "top"];
 
-    var statictext1 = rHeader.add("statictext", undefined, undefined, {
-        name: "statictext1",
-        multiline: "true",
+    var tp = win.add("tabbedpanel", undefined, undefined, {
+        name: "tp",
+        borderStyle: "black"
     });
-    statictext1.enabled = false;
-    statictext1.text = "Quick Render Layers";
+    tp.alignChildren = ["fill", "fill"];
+    tp.margins = [0, 0, -100, 0];
+    tp.alignment = ["fill", "fill"];
+    tp.borderStyle = ["black"];
+    tp.scrolling = true;
 
-    var settingsBtn = rHeader.add("iconButton", undefined, undefined, {
-        name: "settingsBtn",
+
+    var tab1 = tp.add("tab", undefined, undefined, {
+        name: "tab1"
     });
+    tab1.text = "R";
+    tab1.orientation = "column";
+    tab1.alignChildren = ["fill", "fill"];
+    tab1.alignment = ["fill", "fill"];
+    tab1.spacing = 0;
+    tab1.margins = [10, 10, 10, 0];
 
-    settingsBtn.alignment = ["right", "center"];
-    settingsBtn.text = "?";
-    settingsBtn.size = [30, 30];
+    var tab2 = tp.add("tab", undefined, undefined, {
+        name: "tab2"
+    });
+    tab2.text = "M";
+    tab2.orientation = "column";
+    tab2.alignChildren = ["fill", "top"];
+    tab2.margins = 10;
+    tab2.minWidth = 500;
+
+    var tab3 = tp.add("tab", undefined, undefined, {
+        name: "tab3"
+    });
+    tab3.text = "O";
+    tab3.orientation = "column";
+    tab3.alignChildren = ["fill", "top"];
+    tab3.margins = 10;
+    tab3.minWidth = 500;
 
     // R0
     // ==
-    var r0 = win.add("group", undefined, {
+    var r0 = tab3.add("group", undefined, {
         name: "r0"
     });
     r0.orientation = "row";
-    r0.alignChildren = ["fill", "fill"];
-    r0.spacing = 10;
-    r0.margins = 0;
+    r0.spacing = 0;
+    // r0.alignChildren = ["fill", "fill"];
+
 
     var statictext2 = r0.add("statictext", undefined, undefined, {
         name: "statictext2",
     });
-    statictext2.text = "Output directory: ";
+    statictext2.text = "Output: ";
 
-    var button1 = r0.add("button", undefined, undefined, {
-        name: "button1"
+    var button1 = r0.add("iconbutton", undefined, undefined, {
+        name: "button1",
+        style: "normal"
     });
     button1.text = "Browse";
 
-    // R1
-    // ==
-    var r1 = win.add("group", undefined, {
+    // ------------------ Row 01 ---------------------
+
+    var r1 = tab2.add("group", undefined, {
         name: "r1"
     });
     r1.orientation = "row";
-    r1.alignChildren = ["fill", "fill"];
-    r1.spacing = 10;
+    r1.alignChildren = ["fill", "top"];
+    r1.spacing = 0;
     r1.margins = 0;
+    r1.scrolling = true;
 
     var statictext3 = r1.add("statictext", undefined, undefined, {
         name: "statictext3",
     });
-    statictext3.text = "Output module: ";
+    statictext3.text = "Module: ";
 
     var dropdown1 = r1.add("dropdownlist", undefined, undefined, {
         name: "dropdown1",
@@ -78,21 +110,13 @@
     dropdown1.selection = 0;
     dropdown1.preferredSize.width = 83;
 
-    // R1
-    // ==
-    var r1 = win.add("group", undefined, {
-        name: "r1"
-    });
-    r1.preferredSize.width = 100;
-    r1.orientation = "row";
-    r1.alignChildren = ["fill", "fill"];
-    r1.spacing = 10;
-    r1.margins = 5;
-
     var checkbox1 = r1.add("checkbox", undefined, undefined, {
         name: "checkbox1",
     });
-    checkbox1.text = "Convert to h264";
+    checkbox1.text = "Create h264";
+    checkbox1.value = true;
+
+    r1.alignChildren = ["fill", "top"];
 
     // R00
     // ==
@@ -101,35 +125,21 @@
     });
     r00.preferredSize.height = 0;
     r00.orientation = "column";
-    r00.alignChildren = ["fill", "fill"];
+    r00.alignChildren = ["center", "bottom"];
     r00.spacing = 10;
-    r00.margins = 5;
-    r00.alignment = ["fill", "fill"];
+    r00.margins = 50;
+    r00.alignment = ["left", "bottom"];
 
-    // R2
-    // ==
-    var r2 = win.add("group", undefined, {
-        name: "r2"
-    });
-    r2.preferredSize.height = 20;
-    r2.orientation = "column";
-    r2.alignChildren = ["fill", "fill"];
-    r2.spacing = 10;
-    r2.margins = 5;
-    r2.alignment = ["fill", "fill"];
-
-    var Render = r2.add("button", undefined, undefined, {
-        name: "Render"
+    var Render = tab1.add("iconbutton", undefined, undefined, {
+        name: "Render",
+        style: "normal"
     });
     Render.text = "Render";
-    Render.alignment = ["fill", "bottom"];
+    Render.alignment = ["fill", "fill"];
     Render.enabled = false;
-    Render.preferredSize.height = 50;
 
-    win.show();
-
+    win.show(); // Reset UI
     refreshTemplates();
-
     win.maxWidth = 100;
 
     win.layout.layout(true);
@@ -157,14 +167,23 @@
         Render.enabled = true;
         button1.active = false;
 
+        Render.addEventListener("mouseover", function() {
+            Render.text = "Render to: " + outFolder;
+            Render.active = false;
+        })
+
+        Render.addEventListener("mouseout", function() {
+            Render.text = "Render";
+        })
+
         if (r00.children.length > 0) r00.remove(0);
 
-        var fString = r00.add("statictext", undefined, undefined, {
+        var fString = tab3.add("statictext", undefined, undefined, {
             name: "fString",
         });
 
         fString.enabled = false;
-        fString.text = outFolder + "/" + "[myLayer]";
+        fString.text = "Export to:" + outFolder + "/" + "[myLayer]";
         MY_FILE = outFolder.toString();
         alert(MY_FILE);
         win.layout.layout(true);
@@ -172,107 +191,65 @@
         win.onResizing = win.onResize = function() {
             this.layout.resize();
         };
-    };
 
-    settingsBtn.onClick = function() {
-
-        alert("Quick Render Layers v1.0 \n Quick Render Layers allows you to output renders for each layer within a given comp. This is not usually possible due to limitations in After Effects. \n \n If you want to output h.264 files, you'll be prompted for a path to your own FFmpeg binary. \n \n Made by hsom");
-
-        // var setsWin = new Window("dialog", undefined, undefined);
-        // setsWin.text = "Settings";
-        // setsWin.orientation = "column";
-        // setsWin.alignChildren = ["fill", "center"];
-        // setsWin.spacing = 10;
-        // setsWin.margins = 16;
-
-        // setsWin.minWidth = 500;
-
-
-        // var setsGrp1 = setsWin.add("group", undefined, {
-        //     name: "setsGrp1",
-        // });
-
-
-        // var setsStaticText1 = setsGrp1.add("statictext", {
-        //     name: "setsStaticText1",
-        // });
-
-        // setsStaticText1.text = "Hello";
-
-        // setsWin.show();
     };
 }
 
-// Variables
-var myComp = app.project.activeItem;
-var ffmpegInstallation = "\"/Users/hsom/Library/Application Support/Adobe/CEP/extensions/Anubis/src/ffmpeg/ffmpeg\"";
+// Check to see if files can be written by the network
+canWriteFiles();
 
-function QR() {
-    if (myComp && myComp instanceof CompItem) {
+updateSetting(checkbox1.value, true);
 
-        if (myComp.selectedLayers < 1) {
-            return alert("Error \n  Select at least one layer to render");
-        };
+// -----------------------------------------------
+//                   Functions                    
+// -----------------------------------------------
 
-        //Loop through each selected layer
-        for (var i = 0; i < myComp.selectedLayers.length; i++) {
-            myLayer = myComp.selectedLayers[i];
+// When UI panel is updated, store the settings 
+function updateSetting(settingName, settingValue) {
+    var sectionName = "qrl"
+    var sets = app.settings;
 
-            // Store variables for cur work area to reset later
-            var a = myComp.workAreaStart;
-            var b = myComp.workAreaDuration;
+    if (!(sets.haveSetting(sectionName, settingName))) {
+        // alert("This would establish a setting");
 
-            // Reset work area bounds to get around the annoying problem
-            myComp.workAreaStart = 0;
-            myComp.workAreaDuration = myComp.duration;
+        // Then save the setting
 
-            // Set new work area bounds
-            myComp.workAreaStart = myLayer.inPoint;
-            myComp.workAreaDuration = myLayer.outPoint - myLayer.inPoint;
+        sets.saveSetting(sectionName, settingName, settingValue);
 
-            // Check if selected, get attributes for render queue
-
-            var rqi = app.project.renderQueue.items.add(myComp);
-
-            // sets the render duration manually
-            rqi.applyTemplate("Best Settings");
-            rqi.timeSpanStart = myComp.workAreaStart;
-            rqi.timeSpanDuration = myComp.workAreaDuration;
-            var om = rqi.outputModule(1);
-            om.applyTemplate(dropdown1.selection);
-            var outFName = myLayer.name;
-
-            // If h264 checked, stores output in temp subfolder 
-            if (checkbox1.value == 1) {
-                alert(system.callSystem("mkdir -p \"" + MY_FILE + "/mp4\""));
-                om.file = new File(MY_FILE + "/mp4/" + outFName);
-            } else {
-                om.file = new File(MY_FILE + "/" + outFName);
-            };
-
-        };
-        // Reset work area duration
-        myComp.workArea = a;
-        myComp.workAreaDuration = b;
-
-        // Render queue
-        app.project.renderQueue.render();
-
-        //Render out h264 versions if checkbox ticked
-        var syscall1 = ("cd \"" + MY_FILE + "/mp4\"; for i in *.mov; do " + ffmpegInstallation + " -y -i \"\$i\" \"\$\{i\%.*\}.mp4\"; mv *.mp4 .. ; done").toString();
-        var syscall2 = ("cd \"" + MY_FILE + "\"; rm -r \"./mp4\"");
-        if (checkbox1.value == true) {
-            alert(syscall1);
-            var myCall = system.callSystem(syscall1);
-            var myCall = system.callSystem(syscall2);
-            alert(myCall);
-        } else {
-            return
-        };
-
-    };
+    } else {
+        // alert("This would update the setting");
+        alert(sets.getSetting(sectionName, settingName));
+        sets.saveSetting(sectionName, settingName, settingValue);
+    }
 };
 
+// Checks whether script has permission to write files to the network
+function canWriteFiles() {
+    var commandID, scriptName, tabName;
+
+    commandID = 3131;
+    tabName = 'Scripting & Expressions';
+
+    if (isSecurityPrefSet()) return true;
+
+
+    alert(message = 'This script requires access to write files.\n' +
+        'Go to the "' + tabName + '" panel of the application preferences and make sure ' +
+        '"Allow Scripts to Write Files and Access Network" is checked.');
+
+    app.executeCommand(commandID);
+
+    return isSecurityPrefSet();
+
+    function isSecurityPrefSet() {
+        return app.preferences.getPrefAsLong(
+            'Main Pref Section',
+            'Pref_SCRIPTING_FILE_NETWORK_SECURITY'
+        ) === 1;
+    }
+}
+
+// Grabs all templates from the list of output modules
 function refreshTemplates() {
     var activeComp = app.project.activeItem;
 
@@ -293,4 +270,129 @@ function refreshTemplates() {
     if (om.templates.length > 0) dropdown1.selection = 0;
 
     rqi.remove(); // Remove the temp render queue item
+};
+
+function QR() {
+    if (myComp && myComp instanceof CompItem) {
+
+        if (myComp.selectedLayers < 1) {
+            return alert("Error \n  Select at least one layer to render");
+        };
+
+        for (var i = 0; i < myComp.selectedLayers.length; i++) { //Loop through each selected layer
+            myLayer = myComp.selectedLayers[i];
+
+            var a = myComp.workAreaStart; // Store variables for cur work area to reset later
+            var b = myComp.workAreaDuration;
+
+            myComp.workAreaStart = 0; // Reset work area bounds to get around the annoying problem
+            myComp.workAreaDuration = myComp.duration;
+
+            myComp.workAreaStart = myLayer.inPoint; // Set new work area bounds
+            myComp.workAreaDuration = myLayer.outPoint - myLayer.inPoint;
+
+            var rqi = app.project.renderQueue.items.add(myComp); // Check if selected, get attributes for render queue
+
+            // sets the render duration manually
+            rqi.applyTemplate("Best Settings");
+            rqi.timeSpanStart = myComp.workAreaStart;
+            rqi.timeSpanDuration = myComp.workAreaDuration;
+            var om = rqi.outputModule(1);
+            om.applyTemplate(dropdown1.selection);
+            var outFName = myLayer.name;
+
+            // If h264 checked, stores output in temp subfolder 
+            if (checkbox1.value == 1) {
+                alert(system.callSystem("mkdir -p \"" + MY_FILE + "/Generating MP4s...\""));
+                om.file = new File(MY_FILE + "/Generating MP4s.../" + outFName);
+            } else {
+                om.file = new File(MY_FILE + "/" + outFName);
+            };
+
+        };
+        // Reset work area duration
+        myComp.workArea = a;
+        myComp.workAreaDuration = b;
+
+        var animationInterval = 250;
+        animate(animationInterval);
+
+        // Render queue - doesn't return until render finished
+        app.project.renderQueue.render();
+
+        //Render out h264 versions if checkbox ticked
+
+        var syscall1 = ("cd \"" + MY_FILE + "/Generating MP4s...\"; for i in *.mov; do " + ffmpegInstallation + " -y -i \"\$i\" \"\$\{i\%.*\}.mp4\"; mv *.mp4 .. ; done").toString();
+        var syscall2 = ("cd \"" + MY_FILE + "\"; rm -r \"./Generating MP4s...\"");
+        if (checkbox1.value == true) {
+            // Change button text
+            Render.text = "Generating MP4s...";
+            Render.active = false;
+            Render.enabled = false;
+            win.layout.layout(true);
+
+            alert(syscall1);
+            var myCall = system.callSystem(syscall1);
+            var myCall = system.callSystem(syscall2);
+            alert(myCall);
+        } else {
+            return
+        };
+
+        Render.text = "Done!";
+        Render.active = false;
+        $.sleep(250);
+
+        // Change button text back
+        Render.text = "Render";
+        Render.active = false;
+        Render.enabled = true;
+        win.layout.layout(true);
+
+    };
+};
+
+
+
+function animate(interval) {
+    // Change button text
+    Render.text = "Let's goooo";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "😎";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "!!";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "!!!";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "RENdering";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "RENDERing";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "RENDERING";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
+    $.sleep(interval);
+    Render.text = "RENDERING";
+    Render.active = false;
+    Render.enabled = false;
+    win.layout.layout(true);
 };
